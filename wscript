@@ -22,8 +22,8 @@ def build(ctx):
     build_worker = os.path.exists('worker_src')
     binaries = []
 
-    #ctx.all_envs['basalt']['CFLAGS'].remove('-mcpu=cortex-m3')
-    #ctx.all_envs['basalt']['CFLAGS'].append('-mcpu=cortex-m4')
+    ctx.all_envs['basalt']['CFLAGS'].remove('-mcpu=cortex-m3')
+    ctx.all_envs['basalt']['CFLAGS'].append('-mcpu=cortex-m4')
 
     for p in ctx.env.TARGET_PLATFORMS:
         ctx.set_env(ctx.all_envs[p])
