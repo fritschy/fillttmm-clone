@@ -166,7 +166,7 @@ static void init_config(struct App *a) {
    int bg = persist_read_int(KEY_BG);
    int fg = persist_read_int(KEY_FG);
    if (fg == bg && fg == 0) {
-      bg = 0xe35462;
+      bg = 0xff0000;
       fg = 0xffffff;
    }
    set_colors(bg, fg);
