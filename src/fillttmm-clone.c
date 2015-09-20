@@ -5,7 +5,7 @@
 #include "util.h"
 #include "fillttmm-clone.h"
 
-#if 1
+#if 0
 #undef APP_LOG
 #define APP_LOG(...)
 #define START_TIME_MEASURE() {
@@ -139,13 +139,19 @@ static void init_time(struct App *a) {
    a->t = *tm;
 }
 
-static void set_colors(int bg, int fg) {
-   g->fg = GColorFromRGB(fg >> 16, (fg & 0xff00) >> 8, fg & 0xff).argb;
-   g->bg = GColorFromRGB(bg >> 16, (bg & 0xff00) >> 8, bg & 0xff).argb;
+static void set_colors(uint8_t bg, uint8_t fg) {
+   g->fg = fg;
+   g->bg = bg;
    APP_LOG(APP_LOG_LEVEL_DEBUG, "bg=%02x, fg=%02x", (unsigned)bg, (unsigned)fg);
    if (g->w) {
       layer_mark_dirty(window_get_root_layer(g->w));
    }
+   persist_write_int(0, ((int)g->fg << 8) | g->bg);
+}
+
+static void set_colors_rgb(int bg, int fg) {
+   set_colors(GColorFromRGB(bg >> 16, (bg & 0xff00) >> 8, bg & 0xff).argb,
+              GColorFromRGB(fg >> 16, (fg & 0xff00) >> 8, fg & 0xff).argb);
 }
 
 static void inbox_received_handler(DictionaryIterator *iter, void *data) {
@@ -154,27 +160,23 @@ static void inbox_received_handler(DictionaryIterator *iter, void *data) {
    if(tfg && tbg) {
       int fg = tfg->value->uint32;
       int bg = tbg->value->uint32;
-
-      set_colors(bg, fg);
-
-      persist_write_int(KEY_FG, fg);
-      persist_write_int(KEY_BG, bg);
+      set_colors_rgb(bg, fg);
    }
 }
 
 static void init_config(struct App *a) {
-   int bg = persist_read_int(KEY_BG);
-   int fg = persist_read_int(KEY_FG);
-   if (fg == bg && fg == 0) {
-      bg = 0xff0000;
-      fg = 0xffffff;
+   int bg = persist_read_int(0);
+   bg &= 0xffff;
+   int fg = bg >> 8;
+   bg &= 0xff;
+   if (fg == bg) {
+      bg = 0xf0; // red
+      fg = 0xff; // white
    }
    set_colors(bg, fg);
    app_message_register_inbox_received(inbox_received_handler);
    app_message_open(app_message_inbox_size_maximum(),
          app_message_outbox_size_maximum());
-   persist_write_int(KEY_FG, fg);
-   persist_write_int(KEY_BG, bg);
 }
 
 static void init(struct App *a) {
