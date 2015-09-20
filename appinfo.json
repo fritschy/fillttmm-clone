@@ -1,14 +1,13 @@
 {
     "appKeys": {
-        "bg": 0,
-        "fg": 0
+        "KEY_BG": 0,
+        "KEY_FG": 1
     },
     "capabilities": [
         "configurable"
     ],
     "companyName": "fritschy.de",
     "longName": "fillttmm-clone",
-    "projectType": "native",
     "resources": {
         "media": []
     },

@@ -3,6 +3,7 @@
 #include "glyphs.h"
 #include "fb.h"
 #include "util.h"
+#include "fillttmm-clone.h"
 
 #if 1
 #undef APP_LOG
@@ -27,9 +28,10 @@ static unsigned int get_time(void) {
 #endif
 
 struct App {
-   Window *w;
-   uint8_t color;
    struct tm t;
+   Window *w;
+   uint8_t fg;
+   uint8_t bg;
 };
 
 struct App *g;
@@ -50,8 +52,9 @@ static int drawNumber(GPoint p, unsigned num, int s, uint8_t c) {
 static void draw(void) {
    START_TIME_MEASURE();
 
-   static uint8_t bg = 0xf0; // red
-   static uint8_t fg = 0xff; // white
+   uint8_t bg = g->bg;
+   uint8_t fg = g->fg;
+
    fbClear(bg);
 
    static char *weekday[] = {
@@ -136,6 +139,44 @@ static void init_time(struct App *a) {
    a->t = *tm;
 }
 
+static void set_colors(int bg, int fg) {
+   g->fg = GColorFromRGB(fg >> 16, (fg & 0xff00) >> 8, fg & 0xff).argb;
+   g->bg = GColorFromRGB(bg >> 16, (bg & 0xff00) >> 8, bg & 0xff).argb;
+   APP_LOG(APP_LOG_LEVEL_DEBUG, "bg=%02x, fg=%02x", (unsigned)bg, (unsigned)fg);
+   if (g->w) {
+      layer_mark_dirty(window_get_root_layer(g->w));
+   }
+}
+
+static void inbox_received_handler(DictionaryIterator *iter, void *data) {
+   Tuple *tfg = dict_find(iter, KEY_FG);
+   Tuple *tbg = dict_find(iter, KEY_BG);
+   if(tfg && tbg) {
+      int fg = tfg->value->uint32;
+      int bg = tbg->value->uint32;
+
+      set_colors(bg, fg);
+
+      persist_write_int(KEY_FG, fg);
+      persist_write_int(KEY_BG, bg);
+   }
+}
+
+static void init_config(struct App *a) {
+   int bg = persist_read_int(KEY_BG);
+   int fg = persist_read_int(KEY_FG);
+   if (fg == bg && fg == 0) {
+      bg = 0xe35462;
+      fg = 0xffffff;
+   }
+   set_colors(bg, fg);
+   app_message_register_inbox_received(inbox_received_handler);
+   app_message_open(app_message_inbox_size_maximum(),
+         app_message_outbox_size_maximum());
+   persist_write_int(KEY_FG, fg);
+   persist_write_int(KEY_BG, bg);
+}
+
 static void init(struct App *a) {
    g = a;
    a->w = window_create();
@@ -146,6 +187,7 @@ static void init(struct App *a) {
                               (WindowHandlers){
                                  .load = window_load, .unload = window_unload,
                               });
+   init_config(a);
    window_stack_push(a->w, false);
 }
 
