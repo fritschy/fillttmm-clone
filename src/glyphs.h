@@ -9,7 +9,7 @@ static inline int char2index(char c) {
    if (c >= 'a' && c <= 'z')
       return c - 'a' + 10;
    if (c >= 'A' && c <= 'Z')
-      return c - 'a' + 10;
+      return c - 'A' + 10;
    return 36;
 }
 

@@ -1,18 +1,25 @@
 {
-  "uuid": "e1b2a17d-6f71-4732-9c1f-71ca15393558",
-  "shortName": "fillttmm-clone",
-  "longName": "fillttmm-clone",
-  "companyName": "fritschy.de",
-  "versionLabel": "1.0",
-  "sdkVersion": "3",
-  "targetPlatforms": ["basalt"],
-  "watchapp": {
-    "watchface": false
-  },
-  "appKeys": {
-    "dummy": 0
-  },
-  "resources": {
-    "media": []
-  }
+    "appKeys": {
+        "bg": 0,
+        "fg": 0
+    },
+    "capabilities": [
+        "configurable"
+    ],
+    "companyName": "fritschy.de",
+    "longName": "fillttmm-clone",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "3",
+    "shortName": "fillttmm-clone",
+    "targetPlatforms": [
+        "basalt"
+    ],
+    "uuid": "e1b2a17d-6f71-4732-9c1f-71ca15393558",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
 }
