@@ -1,5 +1,5 @@
 Pebble.addEventListener('showConfiguration', function(e) {
-   var url = 'https://rawgit.com/fritschy/fillttmm-clone/config/config/index.html'
+   var url = 'https://rawgit.com/fritschy/fillttmm-clone/1.0/config/index.html'
    console.log('Showing config page ' + url);
    Pebble.openURL(url);
 });
