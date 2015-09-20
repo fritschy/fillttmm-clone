@@ -5,7 +5,7 @@
 #include "util.h"
 #include "fillttmm-clone.h"
 
-#if 0
+#if 1
 #undef APP_LOG
 #define APP_LOG(...)
 #define START_TIME_MEASURE() {
