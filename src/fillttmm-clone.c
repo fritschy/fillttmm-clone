@@ -86,7 +86,7 @@ static void draw(void) {
    switch (g->t.tm_min & 1) {
       case 0: // day-of-month 3-letter-month
          p.x += drawNumber(p, g->t.tm_mday, 2, fg);
-         p.x += 14;
+         p.x += 13;
          p.x += drawString(p, month[g->t.tm_mon], 2, fg);
          break;
       case 1: // weekday
