@@ -10,6 +10,7 @@
 #define APP_LOG(...)
 #define START_TIME_MEASURE() {
 #define END_TIME_MEASURE(x) }
+#define DBG(...)
 #else
 static unsigned int get_time(void) {
    time_t s;
@@ -18,20 +19,24 @@ static unsigned int get_time(void) {
    return (s & 0xfffff) * 1000 + ms;
 }
 
+#define DBG(...) APP_LOG(APP_LOG_LEVEL_DEBUG, __VA_ARGS__)
+
 #define START_TIME_MEASURE() \
    {                         \
    unsigned tm_0 = get_time()
 #define END_TIME_MEASURE(x)                                       \
    unsigned tm_1 = get_time();                                    \
-   APP_LOG(APP_LOG_LEVEL_DEBUG, "%s: took %dms", x, tm_1 - tm_0); \
+   DBG("%s: took %dms", x, tm_1 - tm_0); \
    }
 #endif
 
 struct App {
    struct tm t;
    Window *w;
+   AppTimer *timer;
    uint8_t fg;
    uint8_t bg;
+   uint8_t day_or_month;
 };
 
 struct App *g;
@@ -83,7 +88,7 @@ static void draw(void) {
    };
 
    GPoint p = { 12, 17 };
-   switch (g->t.tm_min & 1) {
+   switch (g->day_or_month) {
       case 0: // day-of-month 3-letter-month
          p.x += drawNumber(p, g->t.tm_mday, 2, fg);
          p.x += 13;
@@ -93,6 +98,8 @@ static void draw(void) {
          drawString(p, weekday[g->t.tm_wday], 2, fg);
          break;
    }
+
+   g->day_or_month = !g->day_or_month;
 
    p = (GPoint){ 12, 46 };
    drawNumber(p, g->t.tm_hour, 5, fg);
@@ -121,9 +128,28 @@ static void update(Layer *layer, GContext *ctx) {
    fbSet(NULL);
 }
 
+// timer and tick leapfrog each other ...
+static void timer_handler(void *first) {
+   g->timer = app_timer_register(60000, timer_handler, NULL);
+   if (!first)
+      layer_mark_dirty(window_get_root_layer(g->w));
+   DBG("setting timer to 60000 ms");
+}
+
 static void tick(struct tm *tick_time, TimeUnits units_changed) {
+   static int first = 2;
+   // start timer at second tick, as the first is really just when the
+   // watchface got started
+   if (first == 1) {
+      g->timer = app_timer_register(30000, timer_handler, &first);
+      DBG("setting timer to 30000 ms");
+   }
+   if (first) {
+      first--;
+   }
    g->t = *tick_time;
    layer_mark_dirty(window_get_root_layer(g->w));
+   DBG("watch tick %02d:%02d:%02d", tick_time->tm_hour, tick_time->tm_min, tick_time->tm_sec);
 }
 
 static void window_load(Window *w) {
@@ -142,7 +168,7 @@ static void init_time(struct App *a) {
 static void set_colors(uint8_t bg, uint8_t fg) {
    g->fg = fg;
    g->bg = bg;
-   APP_LOG(APP_LOG_LEVEL_DEBUG, "bg=%02x, fg=%02x", (unsigned)bg, (unsigned)fg);
+   DBG("bg=%02x, fg=%02x", (unsigned)bg, (unsigned)fg);
    if (g->w) {
       layer_mark_dirty(window_get_root_layer(g->w));
    }
@@ -196,8 +222,7 @@ static void init(struct App *a) {
 static void fini(struct App *a) {
    tick_timer_service_unsubscribe();
    window_destroy(a->w);
-   a->w = NULL;
-   g = NULL;
+   app_timer_cancel(g->timer);
 }
 
 int main(void) {
