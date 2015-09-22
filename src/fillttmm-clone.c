@@ -222,7 +222,8 @@ static void init(struct App *a) {
 static void fini(struct App *a) {
    tick_timer_service_unsubscribe();
    window_destroy(a->w);
-   app_timer_cancel(g->timer);
+   if (g->timer)
+       app_timer_cancel(g->timer);
 }
 
 int main(void) {
